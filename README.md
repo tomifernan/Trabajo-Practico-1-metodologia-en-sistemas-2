@@ -1,8 +1,43 @@
-# API de Broker Financiero - Metodología de Sistemas II
+# Trabajo Práctico 1
 
-## Descripción
+## Problemas detectados en el código original
 
-Esta API simula un broker financiero que permite realizar operaciones de trading, gestión de portafolios y análisis de mercado.
+En el archivo `TradingService.ts` se encontraron los siguientes problemas de diseño:
+
+- **Duplicación de código**: Los métodos `executeBuyOrder` y `executeSellOrder` repetían gran parte de la lógica, violando el principio DRY.
+- **Violación del principio SRP (Single Responsibility Principle)**: La clase `TradingService` se encargaba de demasiadas tareas (validaciones, lógica de negocio, actualización de balances y portafolio).
+- **Violación del principio OCP (Open/Closed Principle)**: Si se quería agregar un nuevo tipo de orden, era necesario modificar `TradingService`, lo que generaba alto acoplamiento y baja extensibilidad.
+
+---
+
+## Refactorización aplicada
+
+- Se aplicaron los patrones **Strategy** y **Factory**:
+  - `TradingService.ts` ya no contiene lógica de compra y venta; su única responsabilidad es **delegar a la estrategia correcta**.
+  - Cada estrategia (`BuyOrderStrategy`, `SellOrderStrategy`) encapsula la lógica de un tipo de orden específico.
+  - El **Factory** centraliza la creación de estrategias, devolviendo la adecuada según el tipo de operación (`buy` o `sell`).
+
+---
+
+## Justificación de los patrones utilizados
+
+- **Por qué Strategy**  
+  El patrón **Strategy** permite encapsular distintos comportamientos (comprar, vender, o futuros tipos de órdenes como `LimitOrder` o `StopLossOrder`) dentro de clases independientes que comparten una interfaz común.  
+  Esto elimina la necesidad de condicionales (`if/else`) dentro de `TradingService`, mejora la legibilidad y facilita extender el sistema sin romper el código existente.
+
+- **Por qué Factory**  
+  El patrón **Factory** complementa a Strategy creando la estrategia correcta de manera centralizada.  
+  De esta forma, `TradingService` no necesita saber cómo instanciar cada estrategia: solo pide una orden de tipo `"buy"` o `"sell"` y la Factory se encarga de devolver la clase correspondiente.  
+  Esto desacopla la lógica de creación de objetos y asegura que el código cumpla con **OCP**, ya que agregar una nueva orden no requiere modificar `TradingService`.
+
+---
+
+## Ventajas obtenidas
+
+- **Cumplimiento de SRP**: Cada clase tiene ahora una sola responsabilidad (TradingService delega, las estrategias ejecutan).
+- **Cumplimiento de OCP**: Para agregar nuevas órdenes no es necesario modificar `TradingService`; basta con crear una nueva clase que implemente `OrderStrategy` y registrarla en la Factory.
+- **Código más limpio y mantenible**, evitando duplicación y facilitando la extensión del sistema.
+- **Escalabilidad**: El sistema queda preparado para soportar nuevos tipos de órdenes o reglas de negocio sin alterar el código existente.
 
 ## Características principales
 
