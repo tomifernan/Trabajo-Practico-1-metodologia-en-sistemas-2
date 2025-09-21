@@ -189,3 +189,4 @@ export class TradingService {
     return storage.getTransactionsByUserId(userId);
   }
 }
+
