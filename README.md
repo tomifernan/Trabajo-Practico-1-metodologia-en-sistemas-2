@@ -39,8 +39,9 @@ En el archivo `TradingService.ts` se encontraron los siguientes problemas de dis
 - **Código más limpio y mantenible**, evitando duplicación y facilitando la extensión del sistema.
 - **Escalabilidad**: El sistema queda preparado para soportar nuevos tipos de órdenes o reglas de negocio sin alterar el código existente.
 
-En el archivo `MarketSimulationService.ts` se encontraron los siguientes problemas de diseño:
+## Problemas detectados en el código original
 
+En el archivo `MarketSimulationService.ts` se encontraron los siguientes problemas de diseño:
 Logica de negocio acoplado: El metodo updateMarketPrices contenia una logica de actualizacion de precios fija y no era facilmente adaptable para diferentes escenarios de mercado (alcista, bajista, etc.). La lógica para simular eventos de mercado se encontraba en un método separado, lo que dificultaba su integración en el bucle de simulación principal.
 
 ## Refactorizacion aplicada
@@ -63,7 +64,5 @@ El patrón Template Method nos permitió definir la estructura del proceso de si
 ## Ventajas obtenidas
 
 Reutilización de código: La lógica común de actualización de mercado y portafolios se centraliza en la clase base, evitando la duplicación.
-
 Cumplimiento de OCP: Agregar un nuevo tipo de simulación (por ejemplo, una "fase de estancamiento") solo requiere crear una nueva subclase que implemente el método abstracto calculateNewPrice, sin modificar el código existente.
-
 Flexibilidad y mantenibilidad: La lógica para cada escenario de mercado está claramente separada en su propia clase, lo que hace el código más fácil de entender y mantener.
