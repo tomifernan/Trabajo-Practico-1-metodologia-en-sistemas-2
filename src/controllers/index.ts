@@ -14,7 +14,6 @@ const marketSimulation = new MarketSimulationService();
 export class AuthController {
   static async validateApiKey(req: Request, res: Response) {
     try {
-      // Si llegamos aquí, el middleware ya validó la API key
       const user = req.user;
 
       res.json({
@@ -132,7 +131,7 @@ export class MarketController {
   static async getPriceBySymbol(req: Request, res: Response) {
     try {
       const { symbol } = req.params;
-      const marketData = storage.getMarketDataBySymbol(symbol.toUpperCase());
+      const marketData = storage.getMarketDataBySymbol(String(symbol).toUpperCase());
 
       if (!marketData) {
         return res.status(404).json({
@@ -158,14 +157,14 @@ export class MarketController {
   }
 }
 
-// Controlador de trading - Métodos largos con múltiples responsabilidades
+// Controlador de trading
 export class TradingController {
   static async buyAsset(req: Request, res: Response) {
     try {
       const user = req.user;
       const { symbol, quantity } = req.body;
 
-      // Validaciones adicionales específicas de compra
+      // Validaciones
       if (!symbol || typeof symbol !== "string") {
         return res.status(400).json({
           error: "Símbolo requerido",
@@ -180,8 +179,11 @@ export class TradingController {
         });
       }
 
+      // Normalizar símbolo con seguridad
+      const normalizedSymbol = String(symbol).toUpperCase();
+
       // Verificar que el activo existe
-      const asset = storage.getAssetBySymbol(symbol.toUpperCase());
+      const asset = storage.getAssetBySymbol(normalizedSymbol);
       if (!asset) {
         return res.status(404).json({
           error: "Activo no encontrado",
@@ -189,25 +191,18 @@ export class TradingController {
         });
       }
 
-      // Ejecutar orden de compra
-      const transaction = await tradingService.executeBuyOrder(
+      // Ejecutar orden de compra con Strategy + Factory
+      const transaction = await tradingService.executeOrder(
+        "buy",
         user.id,
-        symbol.toUpperCase(),
+        normalizedSymbol,
         quantity
       );
 
+
       res.status(201).json({
         message: "Orden de compra ejecutada exitosamente",
-        transaction: {
-          id: transaction.id,
-          type: transaction.type,
-          symbol: transaction.symbol,
-          quantity: transaction.quantity,
-          price: transaction.price,
-          fees: transaction.fees,
-          timestamp: transaction.timestamp,
-          status: transaction.status,
-        },
+        transaction,
       });
     } catch (error) {
       res.status(400).json({
@@ -222,7 +217,7 @@ export class TradingController {
       const user = req.user;
       const { symbol, quantity } = req.body;
 
-      // Validaciones similares a buyAsset (código duplicado)
+      // Validaciones
       if (!symbol || typeof symbol !== "string") {
         return res.status(400).json({
           error: "Símbolo requerido",
@@ -237,8 +232,11 @@ export class TradingController {
         });
       }
 
+      // Normalizar símbolo con seguridad
+      const normalizedSymbol = String(symbol).toUpperCase();
+
       // Verificar que el activo existe
-      const asset = storage.getAssetBySymbol(symbol.toUpperCase());
+      const asset = storage.getAssetBySymbol(normalizedSymbol);
       if (!asset) {
         return res.status(404).json({
           error: "Activo no encontrado",
@@ -246,25 +244,17 @@ export class TradingController {
         });
       }
 
-      // Ejecutar orden de venta
-      const transaction = await tradingService.executeSellOrder(
+      // Ejecutar orden de venta con Strategy + Factory
+      const transaction = await tradingService.executeOrder(
+        "sell",
         user.id,
-        symbol.toUpperCase(),
+        normalizedSymbol,
         quantity
       );
 
       res.status(201).json({
         message: "Orden de venta ejecutada exitosamente",
-        transaction: {
-          id: transaction.id,
-          type: transaction.type,
-          symbol: transaction.symbol,
-          quantity: transaction.quantity,
-          price: transaction.price,
-          fees: transaction.fees,
-          timestamp: transaction.timestamp,
-          status: transaction.status,
-        },
+        transaction,
       });
     } catch (error) {
       res.status(400).json({
@@ -279,18 +269,7 @@ export class TradingController {
       const user = req.user;
       const transactions = tradingService.getTransactionHistory(user.id);
 
-      res.json({
-        transactions: transactions.map((transaction) => ({
-          id: transaction.id,
-          type: transaction.type,
-          symbol: transaction.symbol,
-          quantity: transaction.quantity,
-          price: transaction.price,
-          fees: transaction.fees,
-          timestamp: transaction.timestamp,
-          status: transaction.status,
-        })),
-      });
+      res.json({ transactions });
     } catch (error) {
       res.status(500).json({
         error: "Error al obtener historial",
@@ -314,16 +293,7 @@ export class PortfolioController {
         });
       }
 
-      res.json({
-        portfolio: {
-          holdings: portfolio.holdings,
-          totalValue: portfolio.totalValue,
-          totalInvested: portfolio.totalInvested,
-          totalReturn: portfolio.totalReturn,
-          percentageReturn: portfolio.percentageReturn,
-          lastUpdated: portfolio.lastUpdated,
-        },
-      });
+      res.json({ portfolio });
     } catch (error) {
       res.status(500).json({
         error: "Error al obtener portafolio",
@@ -344,7 +314,6 @@ export class PortfolioController {
         });
       }
 
-      // Análisis básico de rendimiento
       const performance = {
         totalValue: portfolio.totalValue,
         totalInvested: portfolio.totalInvested,
@@ -365,13 +334,13 @@ export class PortfolioController {
         },
       };
 
-      // Encontrar activos con mayor y menor rendimiento
       if (portfolio.holdings.length > 0) {
         const sortedByReturn = [...portfolio.holdings].sort(
           (a, b) => b.percentageReturn - a.percentageReturn
         );
         performance.bestPerformer = sortedByReturn[0];
-        performance.worstPerformer = sortedByReturn[sortedByReturn.length - 1];
+        performance.worstPerformer =
+          sortedByReturn[sortedByReturn.length - 1];
       }
 
       res.json({ performance });
@@ -389,7 +358,9 @@ export class AnalysisController {
   static async getRiskAnalysis(req: Request, res: Response) {
     try {
       const user = req.user;
-      const riskAnalysis = analysisService.analyzePortfolioRisk(user.id);
+
+      // Llamada actualizada al Facade (analyzeRisk)
+      const riskAnalysis = analysisService.analyzeRisk(user.id);
 
       res.json({ riskAnalysis });
     } catch (error) {
@@ -403,9 +374,9 @@ export class AnalysisController {
   static async getRecommendations(req: Request, res: Response) {
     try {
       const user = req.user;
-      const recommendations = analysisService.generateInvestmentRecommendations(
-        user.id
-      );
+
+      // Llamada actualizada al Facade (generateRecommendations)
+      const recommendations = analysisService.generateRecommendations(user.id);
 
       res.json({ recommendations });
     } catch (error) {

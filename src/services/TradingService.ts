@@ -176,10 +176,10 @@ class TradingStrategyFactory {
 /* ==== TradingService principal ==== */
 export class TradingService {
   async executeOrder(
+    type: "buy" | "sell",
     userId: string,
     symbol: string,
     quantity: number,
-    type: "buy" | "sell"
   ): Promise<Transaction> {
     const strategy = TradingStrategyFactory.getStrategy(type);
     return strategy.execute(userId, symbol, quantity);

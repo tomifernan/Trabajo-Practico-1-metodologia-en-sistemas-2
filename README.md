@@ -2,11 +2,22 @@
 
 ## Problemas detectados en el código original
 
-En el archivo `TradingService.ts` se encontraron los siguientes problemas de diseño:
+Metodos con duplicacion de logica
+Clases con multiples tareas (violacion de SRP)
+Codigo dificil de extender (violacion de OCP)
 
-- **Duplicación de código**: Los métodos `executeBuyOrder` y `executeSellOrder` repetían gran parte de la lógica, violando el principio DRY.
-- **Violación del principio SRP (Single Responsibility Principle)**: La clase `TradingService` se encargaba de demasiadas tareas (validaciones, lógica de negocio, actualización de balances y portafolio).
-- **Violación del principio OCP (Open/Closed Principle)**: Si se quería agregar un nuevo tipo de orden, era necesario modificar `TradingService`, lo que generaba alto acoplamiento y baja extensibilidad.
+En el archivo `TradingService.ts` implemente los siguientes patrones de diseño (Strategy + Factory)
+
+Problemas detectados en `TradingService.ts` es que ExecuteBuy order y ExecuteSellOrder duplicaban codigo.
+
+Solucion :
+
+- Cree OrderStrategy.
+- Implemente estrategias concretas como BuyOrderStrategy, SellOrderStrategy.
+- TradingService manda la ejecucion a una estrategia seleccionada a travez de Factory.
+
+Beneficios de la implementacion de estos patrones de diseño en `TradingService.ts` seria que cumple con SRP y OCP que al principio del codigo eso no cumplia y
+ademas podemos agregar un tipo de orden y no necesitamos modificar `TradingService.ts`.
 
 ---
 
