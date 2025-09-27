@@ -1,12 +1,15 @@
 # Trabajo Práctico 1
 
-## Problemas detectados en el código original
+## Problemas detectados en el código original TradingService.ts
 
 Metodos con duplicacion de logica
 Clases con multiples tareas (violacion de SRP)
 Codigo dificil de extender (violacion de OCP)
 
 En el archivo `TradingService.ts` implemente los siguientes patrones de diseño (Strategy + Factory)
+
+- Strategy lo que hace es que elimino la necesidad de condicionales y centralizo la logica en clases.
+- Factory lo que hace es que `TradingService.ts` se encargue de las creaciones de estrategias y delega esa responsabilidad.
 
 Problemas detectados en `TradingService.ts` es que ExecuteBuy order y ExecuteSellOrder duplicaban codigo.
 
@@ -19,61 +22,68 @@ Solucion :
 Beneficios de la implementacion de estos patrones de diseño en `TradingService.ts` seria que cumple con SRP y OCP que al principio del codigo eso no cumplia y
 ademas podemos agregar un tipo de orden y no necesitamos modificar `TradingService.ts`.
 
----
+## Problemas detectados en el código original MarketSimulationService
 
-## Refactorización aplicada
+La logica de simulacion estaba en un solo metodo (updateMarketPrices)
 
-- Se aplicaron los patrones **Strategy** y **Factory**:
-  - `TradingService.ts` ya no contiene lógica de compra y venta; su única responsabilidad es **delegar a la estrategia correcta**.
-  - Cada estrategia (`BuyOrderStrategy`, `SellOrderStrategy`) encapsula la lógica de un tipo de orden específico.
-  - El **Factory** centraliza la creación de estrategias, devolviendo la adecuada según el tipo de operación (`buy` o `sell`).
+En el archivo `MarketSimulationService` implemente los siguientes patrones de diseño (Template)
 
----
+- cree una clase base llamada MarketSimulationTemplate que define el cuerpo de la simulacion.
+- cree subclases (RandomMarketSimulation , BullMarketSimulation, BearMarketSimulation) implementan la logica especifica de actualizacion de precios.
 
-## Justificación de los patrones utilizados
+Justificacion del uso de Template:
 
-- **Por qué Strategy**  
-  El patrón **Strategy** permite encapsular distintos comportamientos (comprar, vender, o futuros tipos de órdenes como `LimitOrder` o `StopLossOrder`) dentro de clases independientes que comparten una interfaz común.  
-  Esto elimina la necesidad de condicionales (`if/else`) dentro de `TradingService`, mejora la legibilidad y facilita extender el sistema sin romper el código existente.
+- Permite reutilizar los pasos comunes de simulacionn y solo variar el calculo de precios.
+- Facilita la creacion de nuevas simulaciones sin tocar el codigo base-
 
-- **Por qué Factory**  
-  El patrón **Factory** complementa a Strategy creando la estrategia correcta de manera centralizada.  
-  De esta forma, `TradingService` no necesita saber cómo instanciar cada estrategia: solo pide una orden de tipo `"buy"` o `"sell"` y la Factory se encarga de devolver la clase correspondiente.  
-  Esto desacopla la lógica de creación de objetos y asegura que el código cumpla con **OCP**, ya que agregar una nueva orden no requiere modificar `TradingService`.
+Beneficios: Es que reutilizamos codigo , Cumplimos OCP y ademas tiene mas claridad el codigo.
 
----
+## Problemas detectados en el código original MarketAnalysisService
 
-## Ventajas obtenidas
+Problemas encontrados: La clase tenia muchas responsabilidades como analisis de riesgo , analisis tecnico y recomendaciones. Ademas codigo demasiado largo y dificil de enteder.
 
-- **Cumplimiento de SRP**: Cada clase tiene ahora una sola responsabilidad (TradingService delega, las estrategias ejecutan).
-- **Cumplimiento de OCP**: Para agregar nuevas órdenes no es necesario modificar `TradingService`; basta con crear una nueva clase que implemente `OrderStrategy` y registrarla en la Factory.
-- **Código más limpio y mantenible**, evitando duplicación y facilitando la extensión del sistema.
-- **Escalabilidad**: El sistema queda preparado para soportar nuevos tipos de órdenes o reglas de negocio sin alterar el código existente.
+Patron aplicado (Facade)
+Dividi enn subsistemas:
+RiskAnalyzer (riesgo)
+TechnicalAnalyzer (análisis técnico)
+RecommendationAnalyzer (recomendaciones)
+MarketAnalysisService actúa como fachada, exponiendo solo métodos simples (analyzeRisk, analyzeTechnical, generateRecommendations).
 
-## Problemas detectados en el código original
+Justificacion del uso de Facade:
 
-En el archivo `MarketSimulationService.ts` se encontraron los siguientes problemas de diseño:
-Logica de negocio acoplado: El metodo updateMarketPrices contenia una logica de actualizacion de precios fija y no era facilmente adaptable para diferentes escenarios de mercado (alcista, bajista, etc.). La lógica para simular eventos de mercado se encontraba en un método separado, lo que dificultaba su integración en el bucle de simulación principal.
+- El patrón Facade oculta la complejidad interna y ofrece una interfaz simple para el controlador.
+- Favorece la separación de responsabilidades.
 
-## Refactorizacion aplicada
+Ventajas obtenidas : Cumple SRP (cada clase se encarga de algo en concreto), Simplicidad de uso y tiene escabilidad lo que quiere decir es que es mucho mas facil agregar nuevos subsistemas sin modificar el original.
 
-Se aplicó el patrón Template Method:
+Diagramas de antes y despues de aplicar patrones de diseño:
 
-Se creó una clase base abstracta (MarketSimulationTemplate) que define el esqueleto del algoritmo para actualizar los precios del mercado.
+## TradingService
 
-Los pasos fijos del algoritmo (obtener datos, iterar sobre activos, actualizar portafolios) se implementaron en esta clase base.
+### Antes
 
-El paso variable, calculateNewPrice, se definió como un método abstracto que cada subclase concreta debe implementar.
+![TradingService Antes](</src/images/TradingService%20(antes)+.png>)
 
-Se crearon subclases concretas (RandomMarketSimulation, BullMarketSimulation, BearMarketSimulation, etc.) que implementan la lógica específica para el cálculo de precios en cada escenario.
+### Después (con Strategy + Factory)
 
-## Justificación de los patrones utilizados
+![TradingService Después](</src/images/TradingService%20(despues).png>)
 
-Por qué Template Method
-El patrón Template Method nos permitió definir la estructura del proceso de simulación en una sola clase, mientras que la variación de los precios se delegó a las subclases. Esto evita la repetición de código para los pasos comunes y facilita la creación de nuevos tipos de simulaciones de mercado sin alterar la estructura principal. Ahora, el MarketSimulationService simplemente delega la ejecución al objeto de simulación (la estrategia) adecuado, lo que lo hace más flexible y extensible.
+## MarketSimulationService
 
-## Ventajas obtenidas
+### Antes
 
-Reutilización de código: La lógica común de actualización de mercado y portafolios se centraliza en la clase base, evitando la duplicación.
-Cumplimiento de OCP: Agregar un nuevo tipo de simulación (por ejemplo, una "fase de estancamiento") solo requiere crear una nueva subclase que implemente el método abstracto calculateNewPrice, sin modificar el código existente.
-Flexibilidad y mantenibilidad: La lógica para cada escenario de mercado está claramente separada en su propia clase, lo que hace el código más fácil de entender y mantener.
+![MarketSimulation Antes](</src/images/MarketSimulationService(antes).png>)
+
+### Después (con Template Method)
+
+![MarketSimulation Después](</src/images/MarketSimulationService(despues).png>)
+
+## MarketAnalysisService
+
+### Antes
+
+![MarketAnalysis Antes](</src/images/marketanlysis(antes).png>)
+
+### Después (con Facade)
+
+![MarketAnalysis Después](</src/images/marketanlysis(despues).png>)
