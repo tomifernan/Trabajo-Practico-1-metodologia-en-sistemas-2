@@ -2,12 +2,12 @@ import { Transaction, Portfolio } from "../models/types";
 import { storage } from "../utils/storage";
 import { config } from "../config/config";
 
-/* ==== Estrategia base ==== */
+/* estrategia base */
 interface OrderStrategy {
   execute(userId: string, symbol: string, quantity: number): Promise<Transaction>;
 }
 
-/* ==== Estrategia de compra ==== */
+/* estrategia de compra */
 class BuyOrderStrategy implements OrderStrategy {
   async execute(userId: string, symbol: string, quantity: number): Promise<Transaction> {
     const user = storage.getUserById(userId);
@@ -85,7 +85,7 @@ class BuyOrderStrategy implements OrderStrategy {
   }
 }
 
-/* ==== Estrategia de venta ==== */
+/* estrategia de venta */
 class SellOrderStrategy implements OrderStrategy {
   async execute(userId: string, symbol: string, quantity: number): Promise<Transaction> {
     const user = storage.getUserById(userId);
@@ -164,7 +164,7 @@ class SellOrderStrategy implements OrderStrategy {
   }
 }
 
-/* ==== Factory ==== */
+/* patron factory */
 class TradingStrategyFactory {
   static getStrategy(type: "buy" | "sell"): OrderStrategy {
     if (type === "buy") return new BuyOrderStrategy();
@@ -173,7 +173,7 @@ class TradingStrategyFactory {
   }
 }
 
-/* ==== TradingService principal ==== */
+/* trading service */
 export class TradingService {
   async executeOrder(
     type: "buy" | "sell",

@@ -1,13 +1,14 @@
-// Market analysis service with Facade pattern
 import { Portfolio, RiskAnalysis } from "../models/types";
 import { storage } from "../utils/storage";
 
-/* ===== Subsystem: Risk Analysis ===== */
+/*  Análisis de Riesgo */
 class RiskAnalyzer {
   analyze(portfolio: Portfolio, userId: string): RiskAnalysis {
+   
     const diversificationScore = this.calculateDiversification(portfolio);
     const volatilityScore = this.calculateVolatility(portfolio);
 
+    // Determina nivel de riesgo según los valores calculados
     let riskLevel: "low" | "medium" | "high";
     if (volatilityScore < 30 && diversificationScore > 70) {
       riskLevel = "low";
@@ -17,18 +18,21 @@ class RiskAnalyzer {
       riskLevel = "high";
     }
 
+    // Genera recomendaciones según el riesgo
     const recommendations = this.generateRecommendations(
       diversificationScore,
       volatilityScore,
       riskLevel
     );
 
+    // Crea un análisis con los resultados
     const analysis = new RiskAnalysis(userId);
     analysis.updateRisk(riskLevel, diversificationScore, recommendations);
 
     return analysis;
   }
 
+  // Calcula qué tanto cambia la cartera por sectores
   private calculateDiversification(portfolio: Portfolio): number {
     if (portfolio.holdings.length === 0) return 0;
 
@@ -42,9 +46,9 @@ class RiskAnalyzer {
     const maxSectors = 5;
     const sectorScore = Math.min(sectorCount / maxSectors, 1) * 50;
 
+  
     const totalValue = portfolio.totalValue;
     let concentrationPenalty = 0;
-
     portfolio.holdings.forEach((holding) => {
       const weight = holding.currentValue / totalValue;
       if (weight > 0.3) concentrationPenalty += (weight - 0.3) * 100;
@@ -91,31 +95,32 @@ class RiskAnalyzer {
     const recommendations: string[] = [];
 
     if (diversification < 40)
-      recommendations.push("Consider diversifying into more sectors");
+      recommendations.push("Considera diversificar en más sectores");
     if (volatility > 70)
-      recommendations.push("Reduce volatile assets, add more stable ones");
+      recommendations.push("Reduce activos volátiles, agrega más estables");
     if (riskLevel === "high")
-      recommendations.push("High risk detected, review your investment strategy");
+      recommendations.push("Riesgo alto detectado, revisa tu estrategia");
     if (diversification > 80 && volatility < 30)
-      recommendations.push("Excellent diversification and low risk, keep this strategy");
+      recommendations.push("Excelente diversificación y bajo riesgo, sigue así");
 
     if (recommendations.length === 0)
-      recommendations.push("Portfolio looks balanced, keep monitoring");
+      recommendations.push("Cartera equilibrada, seguir monitoreando");
 
     return recommendations;
   }
 }
 
-/* ===== Subsystem: Technical Analysis ===== */
+/* Análisis Técnico */
 class TechnicalAnalyzer {
   analyze(symbol: string) {
     const marketData = storage.getMarketDataBySymbol(symbol);
-    if (!marketData) throw new Error("Market data not found");
+    if (!marketData) throw new Error("Datos de mercado no encontrados");
 
     const sma20 = this.calculateSMA(marketData.price);
     const sma50 = this.calculateSMA(marketData.price);
     const rsi = this.calculateRSI();
 
+    // Define  compra/venta/espera
     let signal: "buy" | "sell" | "hold" = "hold";
     if (marketData.price > sma20 && sma20 > sma50 && rsi < 70) signal = "buy";
     else if (marketData.price < sma20 && sma20 < sma50 && rsi > 30) signal = "sell";
@@ -131,26 +136,29 @@ class TechnicalAnalyzer {
     };
   }
 
+ 
   private calculateSMA(price: number): number {
     const variation = (Math.random() - 0.5) * 0.1;
     return price * (1 + variation);
   }
+
 
   private calculateRSI(): number {
     return 20 + Math.random() * 60;
   }
 }
 
-/* ===== Subsystem: Investment Recommendations ===== */
+/*  Recomendaciones de Inversión  */
 class RecommendationAnalyzer {
   generate(userId: string) {
     const user = storage.getUserById(userId);
     const portfolio = storage.getPortfolioByUserId(userId);
-    if (!user || !portfolio) throw new Error("User or portfolio not found");
+    if (!user || !portfolio) throw new Error("Usuario o cartera no encontrados");
 
     const recommendations: any[] = [];
     const allAssets = storage.getAllAssets();
 
+  
     allAssets.forEach((asset) => {
       const hasHolding = portfolio.holdings.some((h) => h.symbol === asset.symbol);
       if (hasHolding) return;
@@ -159,14 +167,15 @@ class RecommendationAnalyzer {
       let priority = 0;
       const volatility = Math.random() * 100;
 
+
       if (user.riskTolerance === "low" && volatility < 50) {
-        text = "Low-risk asset recommended for conservative profile";
+        text = "Activo de bajo riesgo recomendado para perfil conservador";
         priority = 1;
       } else if (user.riskTolerance === "high" && volatility > 60) {
-        text = "High-growth potential asset for aggressive profile";
+        text = "Activo de alto crecimiento para perfil agresivo";
         priority = 2;
       } else if (user.riskTolerance === "medium") {
-        text = "Balanced asset recommended for moderate profile";
+        text = "Activo balanceado recomendado para perfil moderado";
         priority = 1;
       }
 
@@ -186,7 +195,8 @@ class RecommendationAnalyzer {
   }
 }
 
-/* ===== Facade ===== */
+/* Facade  */
+// Clase principal que unifica todos los análisis
 export class MarketAnalysisService {
   private riskAnalyzer = new RiskAnalyzer();
   private technicalAnalyzer = new TechnicalAnalyzer();
@@ -194,7 +204,7 @@ export class MarketAnalysisService {
 
   analyzeRisk(userId: string) {
     const portfolio = storage.getPortfolioByUserId(userId);
-    if (!portfolio) throw new Error("Portfolio not found");
+    if (!portfolio) throw new Error("Cartera no encontrada");
     return this.riskAnalyzer.analyze(portfolio, userId);
   }
 

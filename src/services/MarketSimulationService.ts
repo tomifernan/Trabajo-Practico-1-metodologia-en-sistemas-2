@@ -2,10 +2,8 @@
 import { storage } from "../utils/storage";
 import { config } from "../config/config";
 
-/**
- * Clase base (Template Method) que define el flujo común
- * para actualizar precios de mercado y recalcular portfolios.
- */
+
+ // Clase base (Template Method) que define el flujo común
 abstract class MarketSimulationTemplate {
   updatePrices(): void {
     const allMarketData = storage.getAllMarketData();
@@ -22,7 +20,7 @@ abstract class MarketSimulationTemplate {
       marketData.timestamp = new Date();
       storage.updateMarketData(marketData);
 
-      // Actualizar asset correspondiente
+      // Actualizar asset 
       const asset = storage.getAssetBySymbol(marketData.symbol);
       if (asset) {
         asset.currentPrice = newPrice;
@@ -34,10 +32,10 @@ abstract class MarketSimulationTemplate {
     this.updateAllPortfolioValues();
   }
 
-  // Método abstracto que define la variación de precio (cada subclase lo implementa)
+  // Método abstracto que define la variación de precio 
   protected abstract calculateNewPrice(currentPrice: number): number;
 
-  // Actualizar todos los portafolios (mismo código que ya tenías)
+  // Actualizar todos los portafolios
   private updateAllPortfolioValues(): void {
     const allUsers = [
       storage.getUserById("demo_user"),
@@ -83,9 +81,9 @@ abstract class MarketSimulationTemplate {
   }
 }
 
-/**
- * Estrategias concretas de simulación de mercado
- */
+
+ //Estrategias concretas de simulación de mercado
+
 class RandomMarketSimulation extends MarketSimulationTemplate {
   protected calculateNewPrice(currentPrice: number): number {
     const randomChange = (Math.random() - 0.5) * 2; // -1 a +1
@@ -123,15 +121,15 @@ class RecoveryMarketSimulation extends MarketSimulationTemplate {
   }
 }
 
-/**
- * Servicio principal que usa las simulaciones
- */
+
+ // Servicio principal que usa las simulaciones
+ 
 export class MarketSimulationService {
   private isRunning: boolean = false;
   private intervalId: NodeJS.Timeout | null = null;
   private simulation: MarketSimulationTemplate | null = null;
 
-  // Iniciar simulación normal (random)
+
   startMarketSimulation(): void {
     if (this.isRunning) {
       console.log("La simulación de mercado ya está ejecutándose");
@@ -147,7 +145,7 @@ export class MarketSimulationService {
     }, config.market.updateIntervalMs);
   }
 
-  // Detener simulación
+
   stopMarketSimulation(): void {
     if (!this.isRunning) {
       console.log("La simulación de mercado no está ejecutándose");
